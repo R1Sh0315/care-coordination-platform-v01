@@ -9,6 +9,12 @@ An enterprise-grade, HIPAA-compliant patient care coordination system designed t
 
 ---
 
+## 🌐 Live Infrastructure
+- **Backend API**: [https://care-coordination-platform-v01.onrender.com/](https://care-coordination-platform-v01.onrender.com/)
+- **API Documentation**: [https://care-coordination-platform-v01.onrender.com/api-docs](https://care-coordination-platform-v01.onrender.com/api-docs)
+
+---
+
 ## 🚀 Overview
 
 The **Care Coordination & Clinical Workflow Platform** is a specialized MERN-based solution for healthcare providers. It transitions from traditional manual intake processes to an intelligent, state-driven workflow management system.
