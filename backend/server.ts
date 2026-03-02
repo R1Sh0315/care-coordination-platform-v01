@@ -5,7 +5,7 @@ import { RuleEngineService } from './src/services/ruleEngine.service';
 import { AuthService } from './src/services/auth.service';
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config(); // Looks in the root of the project by default
 
 import app from './src/app';
 
