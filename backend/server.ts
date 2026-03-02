@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+import { RuleEngineService } from './src/services/ruleEngine.service';
+import { AuthService } from './src/services/auth.service';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -14,8 +16,16 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/care_p
 mongoose.set('strictQuery', false);
 mongoose
     .connect(MONGODB_URI)
-    .then(() => {
+    .then(async () => {
         console.log('Connected to MongoDB Successfully! 🛡️');
+        try {
+            await RuleEngineService.seedDefaultRules();
+            console.log('Triage rules checked/seeded ✅');
+            await AuthService.seedUsers();
+            console.log('Initial users checked/seeded ✅');
+        } catch (seedErr) {
+            console.error('Seeding error ⚠️:', seedErr);
+        }
     })
     .catch((err) => {
         console.error('MongoDB Connection Error! ⚠️', err);

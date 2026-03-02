@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import User from '../models/user.model';
 import { AuthService } from '../services/auth.service';
 import { AppError } from '../middleware/error.middleware';
+import { UserRole } from '../types/role.enum';
 
 export class AuthController {
     // Only Admin can register new users
@@ -19,6 +20,40 @@ export class AuthController {
             res.status(201).json({
                 success: true,
                 data: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                },
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async signup(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { name, email, password } = req.body;
+
+            const userExists = await User.findOne({ email });
+            if (userExists) {
+                return next(new AppError('User with this email already exists', 400));
+            }
+
+            // Public signup always defaults to Patient role
+            const user = await User.create({
+                name,
+                email,
+                password,
+                role: UserRole.Patient,
+            });
+
+            const token = AuthService.generateToken(user._id.toString(), user.role);
+
+            res.status(201).json({
+                success: true,
+                token,
+                user: {
                     id: user._id,
                     name: user.name,
                     email: user.email,
