@@ -20,11 +20,11 @@ An enterprise-grade, HIPAA-compliant patient care coordination system designed t
 The **Care Coordination & Clinical Workflow Platform** is a specialized MERN-based solution for healthcare providers. It transitions from traditional manual intake processes to an intelligent, state-driven workflow management system.
 
 ### Key Capabilities:
-- **Intake Lifecycle Management**: A robust finite state machine (FSM) governing patient onboarding.
-- **Clinical Triage Engine**: Rule-based logic to prioritize patients based on clinical risk factors.
-- **Treatment Plans**: Lifecycle tracking for chronic and acute care management.
-- **Lab Integration**: Digital workflow for lab requests, tracking, and results reconciliation.
-- **Enterprise Security**: Advanced RBAC with granular permissions and comprehensive audit logging.
+- **Interactive Admin Intelligence**: Real-time analytical dashboard with live platform metrics, system load monitoring, and audit log tracking.
+- **Mutual Appointment Booking**: Smart scheduling system that checks **both** patient and doctor availability to prevent double-bookings. Supports seamless cancellation and rescheduling.
+- **Clinical Treatment Pathways**: Advanced lifecycle management for care plans with medication safety monitors (Controlled Substance flagging) and interactive pathway drawers.
+- **Intake Lifecycle Management**: A robust finite state machine (FSM) governing patient onboarding and clinical triage.
+- **Enterprise Security**: Advanced RBAC (Patient, Doctor, Nurse, Admin) with granular permissions and immutable audit logging.
 
 ---
 
@@ -32,10 +32,10 @@ The **Care Coordination & Clinical Workflow Platform** is a specialized MERN-bas
 
 The platform follows a **Clean Architecture** pattern to ensure scalability and maintainability.
 
-- **Frontend**: A modular React application using functional components, TypeScript for type safety, and a centralized state management approach.
+- **Frontend**: A modular React application built with TypeScript, featuring a **Premium UI** with dynamic components, modals, and drawers.
 - **Backend**: A RESTful API built with Express.js and TypeScript, utilizing a Controller-Service-Repository pattern.
-- **Database**: MongoDB for flexible, document-based storage of complex clinical data.
-- **State Machine**: Custom implementation for tracking `Patient Intake` and `Treatment Plan` states.
+- **Database**: MongoDB for flexible, document-based storage of clinical data.
+- **Real-Time Layer**: Polling-based live updates for dashboards and clinical lists.
 
 ---
 
@@ -45,24 +45,17 @@ The platform follows a **Clean Architecture** pattern to ensure scalability and 
 care-coordination-platform/
 ├── backend/                # Node.js + Express + TypeScript
 │   ├── src/
-│   │   ├── controllers/    # Request handlers
-│   │   ├── services/       # Business logic & Rule engine
-│   │   ├── models/         # MongoDB schemas
+│   │   ├── controllers/    # Analytical & Workflow handlers
+│   │   ├── services/       # Business logic (Availability, Treatments, etc.)
+│   │   ├── models/         # Clinical schemas (FHIR-inspired)
 │   │   ├── routes/         # API endpoints
-│   │   ├── middleware/     # Auth & RBAC guards
-│   │   ├── utils/          # State machine & Clinical helpers
-│   │   └── index.ts        # Entry point
-│   ├── tests/              # Unit & Integration tests
-│   └── .env.example        # Backend environment variables
+│   │   └── middleware/     # Auth & RBAC guards
 ├── frontend/               # React + Vite + TypeScript
 │   ├── src/
-│   │   ├── components/     # UI Library (Atomic Design)
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # View logic
-│   │   ├── store/          # State management
-│   │   └── api/            # Generic API client
-│   └── .env.example        # Frontend environment variables
-├── Prompts/                # High-level architecture & design documentation
+│   │   ├── features/       # Feature-based architecture (Dashboards, Appointments, etc.)
+│   │   ├── components/     # UI Library (Layout, Sidebar)
+│   │   └── store/          # Zustand state management
+├── Prompts/                # Comprehensive system documentation
 └── README.md
 ```
 
@@ -79,8 +72,6 @@ care-coordination-platform/
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Update .env with your MongoDB URI and JWT secrets
 npm run dev
 ```
 
@@ -88,8 +79,6 @@ npm run dev
 ```bash
 cd frontend
 npm install
-cp .env.example .env
-# Update .env with YOUR API base URL
 npm run dev
 ```
 
@@ -97,14 +86,15 @@ npm run dev
 
 ## 🔐 Role-Based Access Control (RBAC)
 
-The system defines four primary roles with distinct permission sets:
+The system defines specific permissions for enterprise clinical operations:
 
 | Role | Access Level | Description |
 | :--- | :--- | :--- |
-| **Administrator** | Super User | Full access to system logs, user management, and reporting. |
-| **Clinician** | Write | Can triage patients, create treatment plans, and order labs. |
-| **Nurse/Staff** | Read/Update | Manages intake schedules and patient communication. |
-| **Patient** | Restricted | Access to personal health records and appointment history. |
+| **Administrator** | Full Control | System health monitoring, global audit logs, user management. |
+| **Doctor** | Clinical Lead | Create treatment plans, manage assigned patients, view clinical pathways. |
+| **Nurse** | Clinical Support | Process Triage queue, monitor patient vitals, update intake states. |
+| **Receptionist** | Front Desk | Register patient intakes, manage appointment scheduling. |
+| **Patient** | Self-Service | Book/Reschedule personal appointments, view personal treatment plans. |
 
 ---
 
@@ -113,22 +103,21 @@ The system defines four primary roles with distinct permission sets:
 ### Backend (`/backend/.env`)
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/care_platform
+MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_super_secret_jwt_key
-ENVIRONMENT=development
 ```
 
 ### Frontend (`/frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:5000/api/v1
+VITE_API_URL=https://your-api-url/api/v1
 ```
 
 ---
 
 ## 📈 Future Enhancements
+- [ ] **Lab Order Processing**: Digital result entry and technician workflow.
 - [ ] **HL7/FHIR Integration**: Standardized healthcare data exchange.
-- [ ] **AI Prioritization**: Machine learning models for advanced risk prediction.
-- [ ] **Mobile Application**: Native iOS/Android app for clinician mobility.
+- [ ] **AI-Driven Triage**: Machine learning models for advanced risk prediction.
 - [ ] **Telehealth**: Integrated video conferencing for remote consultations.
 
 ---
