@@ -15,7 +15,9 @@ router.post('/appointments', authorizeRoles(UserRole.Receptionist, UserRole.Admi
 router.get('/appointments', AppointmentController.list);
 router.get('/appointments/doctors', AppointmentController.listDoctors);
 router.get('/appointments/availability', AppointmentController.getAvailability);
+router.get('/appointments/:id', AppointmentController.get);
 router.patch('/appointments/:id/status', AppointmentController.updateStatus);
+router.patch('/appointments/:id/reschedule', authorizeRoles(UserRole.Receptionist, UserRole.Admin, UserRole.Patient, UserRole.Doctor), AppointmentController.reschedule);
 
 // Lab Workflow
 router.post('/labs', authorizeRoles(UserRole.Doctor, UserRole.Admin), LabController.order);

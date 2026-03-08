@@ -12,9 +12,24 @@ import TriageList from './features/triage/TriageList';
 import AuditLogs from './features/audit/AuditLogs';
 import AppointmentList from './features/appointments/AppointmentList';
 import BookAppointment from './features/appointments/BookAppointment';
+import DoctorDashboard from './features/dashboard/DoctorDashboard';
+import { useAuthStore } from './store/authStore';
 
 // Simple placeholder components for other modules
-const Dashboard = () => <div><h1>Dashboard</h1><p>Welcome to the Clinical Platform Overview.</p></div>;
+const Dashboard = () => {
+  const { user } = useAuthStore();
+
+  if (user?.role === UserRole.Doctor) {
+    return <DoctorDashboard />;
+  }
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome, {user?.name}. You are logged in as {user?.role}.</p>
+    </div>
+  );
+};
 const Treatments = () => <div><h1>Treatment Plans</h1><p>Clinical care plans and medication tracking.</p></div>;
 const Labs = () => <div><h1>Lab Workflow</h1><p>Laboratory orders and result processing.</p></div>;
 const Unauthorized = () => <div style={{ textAlign: 'center', marginTop: '100px' }}><h1>403 - Unauthorized</h1><p>You do not have permission to access this module.</p></div>;
@@ -62,6 +77,10 @@ const router = createBrowserRouter([
       },
       {
         path: 'appointments/book',
+        element: <BookAppointment />,
+      },
+      {
+        path: 'appointments/reschedule/:id',
         element: <BookAppointment />,
       },
       {

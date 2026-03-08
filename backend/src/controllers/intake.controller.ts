@@ -24,7 +24,7 @@ export class IntakeController {
         }
     }
 
-    static async listIntakes(req: Request, res: Response, next: NextFunction) {
+    static async listIntakes(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { priority, state, patientId } = req.query;
             const filter: any = {};
@@ -32,8 +32,16 @@ export class IntakeController {
             if (state) filter.currentState = state;
             if (patientId) filter.patientId = patientId;
 
-            // Bonus filter: “All HIGH priority intakes in TRIAGE_PENDING”
-            // Example query: ?priority=HIGH&state=TRIAGE_PENDING
+            // Role-based filtering
+            if (req.user?.role === 'Patient') {
+                filter.patientId = req.user.id;
+            } else if (req.user?.role === 'Doctor') {
+                // If the state is not explicitly TRIAGE_PENDING or READY_FOR_TRIAGE (where doctors see all), 
+                // we should filter by assigned doctor
+                if (!state || !['READY_FOR_TRIAGE', 'TRIAGE_PENDING'].includes(state as string)) {
+                    filter.assignedDoctor = req.user.id;
+                }
+            }
 
             const intakes = await IntakeService.listIntakes(filter);
             res.status(200).json({ success: true, count: intakes.length, data: intakes });

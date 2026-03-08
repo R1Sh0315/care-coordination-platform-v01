@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, User, Clock, CheckCircle } from 'lucide-react';
 import api from '../../api/axios';
 import './Appointment.css';
@@ -16,7 +16,9 @@ interface TimeSlot {
 }
 
 const BookAppointment: React.FC = () => {
+    const { id } = useParams<{ id: string }>(); // Appointment ID for rescheduling
     const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [patientId, setPatientId] = useState('');
     const [selectedDoctor, setSelectedDoctor] = useState('');
     const [selectedDate, setSelectedDate] = useState('');
     const [slots, setSlots] = useState<TimeSlot[]>([]);
@@ -30,23 +32,34 @@ const BookAppointment: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchDoctors = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get('/clinical/appointments/doctors');
-                setDoctors(res.data.data);
+                // 1. Fetch doctors
+                const docRes = await api.get('/clinical/appointments/doctors');
+                setDoctors(docRes.data.data);
+
+                // 2. If rescheduling, fetch existing appointment
+                if (id) {
+                    const aptRes = await api.get(`/clinical/appointments/${id}`);
+                    const apt = aptRes.data.data;
+                    setSelectedDoctor(apt.doctorId._id || apt.doctorId);
+                    setNotes(apt.notes || '');
+                    setPatientId(apt.patientId._id || apt.patientId);
+                }
             } catch (err) {
-                console.error("Failed to load doctors", err);
+                console.error("Failed to load clinical data", err);
+                setError('Failed to initialize booking system.');
             }
         };
-        fetchDoctors();
-    }, []);
+        fetchData();
+    }, [id]);
 
     const fetchSlots = async (docId: string, date: string) => {
         if (!docId || !date) return;
         setFetchingSlots(true);
         setError('');
         try {
-            const res = await api.get(`/clinical/appointments/availability?doctorId=${docId}&date=${date}`);
+            const res = await api.get(`/clinical/appointments/availability?doctorId=${docId}&date=${date}${patientId ? `&patientId=${patientId}` : ''}`);
             setSlots(res.data.data);
         } catch (err) {
             setError('Could not load availability. Please try again.');
@@ -76,16 +89,25 @@ const BookAppointment: React.FC = () => {
         setLoading(true);
         setError('');
         try {
-            await api.post('/clinical/appointments', {
-                doctorId: selectedDoctor,
-                appointmentDate: selectedSlot,
-                notes,
-                duration: 30
-            });
+            if (id) {
+                // Reschedule
+                await api.patch(`/clinical/appointments/${id}/reschedule`, {
+                    appointmentDate: selectedSlot,
+                    duration: 30
+                });
+            } else {
+                // New Booking
+                await api.post('/clinical/appointments', {
+                    doctorId: selectedDoctor,
+                    appointmentDate: selectedSlot,
+                    notes,
+                    duration: 30
+                });
+            }
             setSuccess(true);
             setTimeout(() => navigate('/appointments'), 2000);
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Booking failed. Try another slot.');
+            setError(err.response?.data?.message || 'Action failed. Try another slot.');
         } finally {
             setLoading(false);
         }
@@ -95,7 +117,7 @@ const BookAppointment: React.FC = () => {
         return (
             <div className="card" style={{ maxWidth: '500px', margin: '100px auto', padding: '40px', textAlign: 'center' }}>
                 <CheckCircle size={64} color="var(--success)" style={{ marginBottom: '20px' }} />
-                <h2>Appointment Booked!</h2>
+                <h2>Appointment {id ? 'Rescheduled' : 'Booked'}!</h2>
                 <p>Redirecting you back to your list...</p>
             </div>
         );
@@ -104,8 +126,8 @@ const BookAppointment: React.FC = () => {
     return (
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div className="page-header-row">
-                <h1>Book Appointment</h1>
-                <p>Choose your doctor and preferred time slot</p>
+                <h1>{id ? 'Reschedule Appointment' : 'Book Appointment'}</h1>
+                <p>{id ? 'Select a new date and time for your visit.' : 'Choose your doctor and preferred time slot'}</p>
             </div>
 
             <div className="card" style={{ padding: '32px' }}>
@@ -117,7 +139,14 @@ const BookAppointment: React.FC = () => {
                         <select
                             value={selectedDoctor}
                             onChange={handleDoctorChange}
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}
+                            disabled={!!id} // Can't change doctor during simple reschedule in this flow
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border)',
+                                background: id ? '#f3f4f6' : 'white'
+                            }}
                         >
                             <option value="">-- Choose Doctor --</option>
                             {doctors.map(doc => <option key={doc._id} value={doc._id}>Dr. {doc.name}</option>)}
@@ -125,7 +154,7 @@ const BookAppointment: React.FC = () => {
                     </div>
 
                     <div className="form-group" style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}><Calendar size={16} /> Preferred Date</label>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}><Calendar size={16} /> {id ? 'New Date' : 'Preferred Date'}</label>
                         <input
                             type="date"
                             min={new Date().toISOString().split('T')[0]}
@@ -167,15 +196,17 @@ const BookAppointment: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="form-group" style={{ marginBottom: '32px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Reason / Notes (Optional)</label>
-                        <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Briefly describe the reason for visit..."
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '100px' }}
-                        />
-                    </div>
+                    {!id && (
+                        <div className="form-group" style={{ marginBottom: '32px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Reason / Notes (Optional)</label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Briefly describe the reason for visit..."
+                                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', minHeight: '100px' }}
+                            />
+                        </div>
+                    )}
 
                     <div style={{ display: 'flex', gap: '16px' }}>
                         <button
@@ -191,7 +222,7 @@ const BookAppointment: React.FC = () => {
                             className="btn-primary"
                             style={{ flex: 2, padding: '14px', borderRadius: '8px', fontWeight: 700, fontSize: '1rem', border: 'none', cursor: 'pointer' }}
                         >
-                            {loading ? 'Booking...' : 'Confirm Appointment'}
+                            {loading ? (id ? 'Rescheduling...' : 'Booking...') : (id ? 'Update Appointment' : 'Confirm Appointment')}
                         </button>
                     </div>
                 </div>

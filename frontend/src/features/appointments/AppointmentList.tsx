@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User, Stethoscope, Clock, Calendar, AlertCircle, PlusCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Stethoscope, Clock, Calendar, AlertCircle, PlusCircle, XCircle, RotateCcw } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuthStore } from '../../store/authStore';
 import './Appointment.css';
@@ -19,6 +19,7 @@ const AppointmentList: React.FC = () => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuthStore();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchAppointments();
@@ -35,6 +36,17 @@ const AppointmentList: React.FC = () => {
         }
     };
 
+    const handleCancel = async (id: string) => {
+        if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+        try {
+            await api.patch(`/clinical/appointments/${id}/status`, { status: 'CANCELLED' });
+            fetchAppointments(); // Refresh list
+        } catch (err) {
+            console.error('Failed to cancel appointment', err);
+            alert('Failed to cancel appointment. Please try again.');
+        }
+    };
+
     const getStatusClass = (status: string) => {
         switch (status?.toUpperCase()) {
             case 'SCHEDULED': return 'badge-info';
@@ -46,57 +58,80 @@ const AppointmentList: React.FC = () => {
     };
 
     return (
-        <div className="page-header-row">
-            <div>
-                <h1>Appointments</h1>
-                <p>Manage your upcoming and past consultations</p>
+        <div className="page-header-row" style={{ display: 'block' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div>
+                    <h1>Appointments</h1>
+                    <p>Manage your upcoming and past consultations</p>
+                </div>
+
+                {(user?.role === 'Patient' || user?.role === 'Admin' || user?.role === 'Receptionist') && (
+                    <Link to="/appointments/book" className="btn btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '8px', background: 'var(--accent)', color: 'white', fontWeight: 600 }}>
+                        <PlusCircle size={18} /> Book New
+                    </Link>
+                )}
             </div>
 
-            {(user?.role === 'Patient' || user?.role === 'Admin' || user?.role === 'Receptionist') && (
-                <Link to="/appointments/book" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                    <PlusCircle size={18} /> Book New
-                </Link>
-            )}
-
-            <div className="appointment-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', width: '100%', marginTop: '24px' }}>
+            <div className="appointment-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px', width: '100%' }}>
                 {loading ? (
                     <div className="loading-placeholder">Loading appointments...</div>
                 ) : appointments.length === 0 ? (
-                    <div className="empty-state card" style={{ gridColumn: '1 / -1', padding: '64px', textAlign: 'center' }}>
-                        <AlertCircle size={48} />
-                        <p>No appointments found.</p>
+                    <div className="empty-state card" style={{ gridColumn: '1 / -1', padding: '64px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                        <AlertCircle size={48} color="var(--text-muted)" />
+                        <p style={{ color: 'var(--text-muted)' }}>No appointments found.</p>
                     </div>
                 ) : (
                     appointments.map((apt: Appointment) => (
-                        <div key={apt._id} className="appointment-card card" style={{ padding: '24px', transition: 'transform 0.2s ease' }}>
-                            <div className="appointment-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700 }}>
-                                    <Calendar size={18} />
-                                    <span>{new Date(apt.appointmentDate).toLocaleDateString()}</span>
+                        <div key={apt._id} className="appointment-card card" style={{ padding: '24px', transition: 'transform 0.2s ease', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            <div>
+                                <div className="appointment-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 700 }}>
+                                        <Calendar size={18} />
+                                        <span>{new Date(apt.appointmentDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <span className={`badge ${getStatusClass(apt.status)}`}>{apt.status}</span>
                                 </div>
-                                <span className={`badge ${getStatusClass(apt.status)}`}>{apt.status}</span>
-                            </div>
 
-                            <div className="appointment-body" style={{ marginBottom: '20px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                    {user?.role === 'Patient' ? (
-                                        <><Stethoscope size={18} color="var(--accent)" /> <strong>Dr. {apt.doctorId?.name}</strong></>
-                                    ) : (
-                                        <><User size={18} color="var(--accent)" /> <strong>{apt.patientId?.name}</strong></>
+                                <div className="appointment-body" style={{ marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                                        {user?.role === 'Patient' ? (
+                                            <><Stethoscope size={18} color="var(--accent)" /> <strong>Dr. {apt.doctorId?.name}</strong></>
+                                        ) : (
+                                            <><User size={18} color="var(--accent)" /> <strong>{apt.patientId?.name}</strong></>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9em', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                                        <Clock size={16} />
+                                        <span>{new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({apt.duration} min)</span>
+                                    </div>
+
+                                    {apt.notes && (
+                                        <div style={{ background: 'var(--background)', padding: '12px', borderRadius: '8px', fontSize: '0.85em', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                            "{apt.notes}"
+                                        </div>
                                     )}
                                 </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9em', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                                    <Clock size={16} />
-                                    <span>{new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({apt.duration} min)</span>
-                                </div>
-
-                                {apt.notes && (
-                                    <div style={{ background: 'var(--background)', padding: '12px', borderRadius: '8px', fontSize: '0.85em', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                        "{apt.notes}"
-                                    </div>
-                                )}
                             </div>
+
+                            {apt.status === 'SCHEDULED' && (
+                                <div className="appointment-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                                    <button
+                                        className="btn-secondary"
+                                        style={{ flex: 1, padding: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', borderRadius: '6px', border: '1px solid var(--border)' }}
+                                        onClick={() => navigate(`/appointments/reschedule/${apt._id}`)}
+                                    >
+                                        <RotateCcw size={14} /> Reschedule
+                                    </button>
+                                    <button
+                                        className="btn-danger"
+                                        style={{ flex: 1, padding: '8px', fontSize: '0.85rem', color: '#b91c1c', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+                                        onClick={() => handleCancel(apt._id)}
+                                    >
+                                        <XCircle size={14} /> Cancel
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ))
                 )}

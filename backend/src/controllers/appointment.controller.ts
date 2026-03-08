@@ -41,8 +41,56 @@ export class AppointmentController {
     static async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { status } = req.body;
-            const appointment = await AppointmentService.updateStatus(req.params.id, status as AppointmentStatus, req.user?.id!, req.ip);
+
+            const appointment = await AppointmentService.getAppointment(req.params.id);
+            if (!appointment) throw new AppError('Appointment not found', 404);
+
+            // Authorization for Patients
+            if (req.user?.role === UserRole.Patient && appointment.patientId.toString() !== req.user.id) {
+                throw new AppError('Access denied: Only owners can cancel their appointments', 403);
+            }
+
+            const updated = await AppointmentService.updateStatus(req.params.id, status as AppointmentStatus, req.user?.id!, req.ip);
+            res.status(200).json({ success: true, data: updated });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async get(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const appointment = await AppointmentService.getAppointment(req.params.id);
+            if (!appointment) throw new AppError('Appointment not found', 404);
+
+            if (req.user?.role === UserRole.Patient && (appointment.patientId as any)._id?.toString() !== req.user.id) {
+                throw new AppError('Unauthorized access', 403);
+            }
+
             res.status(200).json({ success: true, data: appointment });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async reschedule(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { appointmentDate, duration } = req.body;
+
+            const appointment = await AppointmentService.getAppointment(req.params.id);
+            if (!appointment) throw new AppError('Appointment not found', 404);
+
+            if (req.user?.role === UserRole.Patient && (appointment.patientId as any)._id?.toString() !== req.user.id) {
+                throw new AppError('Access denied: Cannot reschedule others appointments', 403);
+            }
+
+            const updated = await AppointmentService.rescheduleAppointment(
+                req.params.id,
+                appointmentDate,
+                duration,
+                req.user?.id!,
+                req.ip
+            );
+            res.status(200).json({ success: true, data: updated });
         } catch (err) {
             next(err);
         }
@@ -59,11 +107,14 @@ export class AppointmentController {
 
     static async getAvailability(req: AuthRequest, res: Response, next: NextFunction) {
         try {
-            const { doctorId, date } = req.query;
+            const { doctorId, date, patientId: queryPatientId } = req.query;
             if (!doctorId || !date) {
                 throw new AppError('Doctor ID and Date are required', 400);
             }
-            const slots = await AppointmentService.getAvailableSlots(doctorId as string, date as string);
+            // Use query patientId or logged in user if they are a patient
+            const patientId = (queryPatientId as string) || (req.user?.role === UserRole.Patient ? req.user.id : undefined);
+
+            const slots = await AppointmentService.getAvailableSlots(doctorId as string, date as string, patientId);
             res.status(200).json({ success: true, data: slots });
         } catch (err) {
             next(err);

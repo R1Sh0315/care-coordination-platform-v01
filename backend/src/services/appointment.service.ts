@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 
 export class AppointmentService {
     static async createAppointment(data: Partial<IAppointment>, userId: string, ipAddress?: string) {
-        const { doctorId, appointmentDate, duration = 30 } = data;
+        const { doctorId, patientId, appointmentDate, duration = 30 } = data;
 
         // 1. Validate date
         if (new Date(appointmentDate!) < new Date()) {
@@ -13,14 +13,15 @@ export class AppointmentService {
         }
 
         // 2. Check overlap (Race condition prevention)
-        const isAvailable = await this.checkDoctorAvailability(
+        const isAvailable = await this.checkAvailability(
             doctorId!.toString(),
             new Date(appointmentDate!),
-            duration
+            duration,
+            patientId?.toString()
         );
 
         if (!isAvailable) {
-            throw new AppError('Doctor is already booked for this time slot (Overlap Detected)', 409);
+            throw new AppError('Slot is already booked for either doctor or patient', 409);
         }
 
         // 3. Create
@@ -39,29 +40,26 @@ export class AppointmentService {
         return appointment;
     }
 
-    static async checkDoctorAvailability(doctorId: string, requestedDate: Date, durationStr: number): Promise<boolean> {
+    static async checkAvailability(doctorId: string, requestedDate: Date, durationStr: number, patientId?: string, excludeId?: string): Promise<boolean> {
         const start = new Date(requestedDate);
         const end = new Date(start.getTime() + durationStr * 60000);
 
-        // Overlap Logic: (ExistingStart < RequestedEnd) AND (ExistingEnd > RequestedStart)
-        const overlapping = await Appointment.findOne({
-            doctorId: new mongoose.Types.ObjectId(doctorId),
+        const filter: any = {
             status: AppointmentStatus.SCHEDULED,
             $or: [
-                {
-                    // Existing starts during requested OR ends during requested
-                    appointmentDate: { $lt: end },
-                    // Note: durations can vary, so we calculate end on the fly in JS or store it.
-                    // For simplicity with this model, let's use a query that covers the range.
-                }
+                { doctorId: new mongoose.Types.ObjectId(doctorId) }
             ]
-        });
+        };
 
-        // Improved exact overlap check
-        const appointments = await Appointment.find({
-            doctorId: new mongoose.Types.ObjectId(doctorId),
-            status: AppointmentStatus.SCHEDULED
-        });
+        if (patientId) {
+            filter.$or.push({ patientId: new mongoose.Types.ObjectId(patientId) });
+        }
+
+        if (excludeId) {
+            filter._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+        }
+
+        const appointments = await Appointment.find(filter);
 
         const isBusy = appointments.some(app => {
             const appStart = new Date(app.appointmentDate).getTime();
@@ -98,24 +96,78 @@ export class AppointmentService {
         return appointment;
     }
 
+    static async rescheduleAppointment(id: string, newDate: string, duration: number, userId: string, ipAddress?: string) {
+        const appointment = await Appointment.findById(id);
+        if (!appointment) throw new AppError('Appointment not found', 404);
+
+        if (appointment.status === AppointmentStatus.CANCELLED || appointment.status === AppointmentStatus.COMPLETED) {
+            throw new AppError(`Cannot reschedule a ${appointment.status.toLowerCase()} appointment`, 400);
+        }
+
+        const isAvailable = await this.checkAvailability(
+            appointment.doctorId.toString(),
+            new Date(newDate),
+            duration || appointment.duration,
+            appointment.patientId.toString(),
+            id
+        );
+
+        if (!isAvailable) {
+            throw new AppError('Time slot is already booked for either doctor or patient', 409);
+        }
+
+        const previousValue = appointment.toObject();
+        appointment.appointmentDate = new Date(newDate);
+        if (duration) appointment.duration = duration;
+
+        await appointment.save();
+
+        await AuditService.log({
+            entityType: 'APPOINTMENT',
+            entityId: id,
+            action: 'RESCHEDULE_APPOINTMENT',
+            previousValue,
+            newValue: appointment.toObject(),
+            performedBy: userId,
+            ipAddress
+        });
+
+        return appointment;
+    }
+
+
     static async listAppointments(filter: any = {}) {
         return Appointment.find(filter).populate('patientId doctorId', 'name email').sort({ appointmentDate: 1 });
     }
 
-    static async getAvailableSlots(doctorId: string, dateStr: string) {
+    static async getAppointment(id: string) {
+        return Appointment.findById(id).populate('patientId doctorId', 'name email');
+    }
+
+    static async getAvailableSlots(doctorId: string, dateStr: string, patientId?: string) {
         const date = new Date(dateStr);
         const startOfDay = new Date(date.setHours(9, 0, 0, 0)); // 9 AM
         const endOfDay = new Date(date.setHours(17, 0, 0, 0)); // 5 PM
         const slotDuration = 30; // 30 mins
 
-        const existingApps = await Appointment.find({
-            doctorId: new mongoose.Types.ObjectId(doctorId),
+        const filter: any = {
             status: AppointmentStatus.SCHEDULED,
             appointmentDate: {
                 $gte: startOfDay,
                 $lte: endOfDay
             }
-        });
+        };
+
+        if (patientId && doctorId) {
+            filter.$or = [
+                { doctorId: new mongoose.Types.ObjectId(doctorId) },
+                { patientId: new mongoose.Types.ObjectId(patientId) }
+            ];
+        } else if (doctorId) {
+            filter.doctorId = new mongoose.Types.ObjectId(doctorId);
+        }
+
+        const existingApps = await Appointment.find(filter);
 
         const slots = [];
         let current = new Date(startOfDay);
