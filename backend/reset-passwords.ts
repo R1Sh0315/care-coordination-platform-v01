@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/care_platform';
+const MONGODB_URI = process.env.MONGODB_URI!;
+
 
 async function resetPasswords() {
     try {

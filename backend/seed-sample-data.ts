@@ -3,7 +3,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // Fallback just in case, but prefer the env variable
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/care_platform';
+const MONGODB_URI = process.env.MONGODB_URI!;
+
 
 async function seedSamples() {
     try {
