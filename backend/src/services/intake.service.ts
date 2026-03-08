@@ -52,7 +52,7 @@ export class IntakeService {
     }
 
     static async listIntakes(filter: any = {}) {
-        return Intake.find(filter).sort({ createdAt: -1 });
+        return Intake.find(filter).populate('patientId', 'name email').sort({ createdAt: -1 });
     }
 
     static async updateIntake(id: string, data: Partial<IIntake>, userId: string, ipAddress?: string) {

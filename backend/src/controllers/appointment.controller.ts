@@ -3,13 +3,19 @@ import { AppointmentService } from '../services/appointment.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { UserRole } from '../types/role.enum';
 import { AppointmentStatus } from '../models/appointment.model';
+import User from '../models/user.model';
+import { AppError } from '../middleware/error.middleware';
 
 export class AppointmentController {
     static async book(req: AuthRequest, res: Response, next: NextFunction) {
         try {
             const { patientId, doctorId, appointmentDate, duration, notes } = req.body;
+
+            // If user is a patient, enforce their own ID
+            const targetPatientId = req.user?.role === UserRole.Patient ? req.user.id : patientId;
+
             const appointment = await AppointmentService.createAppointment(
-                { patientId, doctorId, appointmentDate, duration, notes },
+                { patientId: targetPatientId, doctorId, appointmentDate, duration, notes },
                 req.user?.id!,
                 req.ip
             );
@@ -37,6 +43,28 @@ export class AppointmentController {
             const { status } = req.body;
             const appointment = await AppointmentService.updateStatus(req.params.id, status as AppointmentStatus, req.user?.id!, req.ip);
             res.status(200).json({ success: true, data: appointment });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async listDoctors(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const doctors = await User.find({ role: UserRole.Doctor, isActive: true }).select('name email');
+            res.status(200).json({ success: true, data: doctors });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getAvailability(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const { doctorId, date } = req.query;
+            if (!doctorId || !date) {
+                throw new AppError('Doctor ID and Date are required', 400);
+            }
+            const slots = await AppointmentService.getAvailableSlots(doctorId as string, date as string);
+            res.status(200).json({ success: true, data: slots });
         } catch (err) {
             next(err);
         }

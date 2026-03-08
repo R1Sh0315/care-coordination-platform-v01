@@ -11,8 +11,10 @@ const router = Router();
 router.use(authenticateJWT);
 
 // Appointments
-router.post('/appointments', authorizeRoles(UserRole.Receptionist, UserRole.Admin), AppointmentController.book);
+router.post('/appointments', authorizeRoles(UserRole.Receptionist, UserRole.Admin, UserRole.Patient), AppointmentController.book);
 router.get('/appointments', AppointmentController.list);
+router.get('/appointments/doctors', AppointmentController.listDoctors);
+router.get('/appointments/availability', AppointmentController.getAvailability);
 router.patch('/appointments/:id/status', AppointmentController.updateStatus);
 
 // Lab Workflow

@@ -24,25 +24,31 @@ interface User {
 interface AuthState {
     user: User | null;
     token: string | null;
+    refreshToken: string | null;
     isAuthenticated: boolean;
-    setAuth: (user: User, token: string) => void;
+    setAuth: (user: User, token: string, refreshToken?: string) => void;
     logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('token'),
+    refreshToken: localStorage.getItem('refreshToken'),
     isAuthenticated: !!localStorage.getItem('token'),
 
-    setAuth: (user, token) => {
+    setAuth: (user, token, refreshToken) => {
         localStorage.setItem('token', token);
+        if (refreshToken) {
+            localStorage.setItem('refreshToken', refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(user));
-        set({ user, token, isAuthenticated: true });
+        set({ user, token, refreshToken: refreshToken || null, isAuthenticated: true });
     },
 
     logout: () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
     },
 }));

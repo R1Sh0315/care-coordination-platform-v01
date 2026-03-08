@@ -63,6 +63,7 @@ const router = Router();
 // Public routes
 router.post('/login', AuthController.login);
 router.post('/signup', AuthController.signup);
+router.post('/refresh', AuthController.refreshToken);
 
 // Admin-only: Register new staff/users
 router.post('/register', authenticateJWT, authorizeRoles(UserRole.Admin), AuthController.registerUser);

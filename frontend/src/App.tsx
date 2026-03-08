@@ -8,12 +8,13 @@ import CreateIntake from './features/intake/CreateIntake';
 import IntakeDetail from './features/intake/IntakeDetail';
 import { UserRole } from './store/authStore';
 
+import TriageList from './features/triage/TriageList';
 import AuditLogs from './features/audit/AuditLogs';
+import AppointmentList from './features/appointments/AppointmentList';
+import BookAppointment from './features/appointments/BookAppointment';
 
 // Simple placeholder components for other modules
 const Dashboard = () => <div><h1>Dashboard</h1><p>Welcome to the Clinical Platform Overview.</p></div>;
-const TriageList = () => <div><h1>Triage Queue</h1><p>Patient clinical evaluation area.</p></div>;
-const Appointments = () => <div><h1>Appointments</h1><p>Scheduling and calendar management.</p></div>;
 const Treatments = () => <div><h1>Treatment Plans</h1><p>Clinical care plans and medication tracking.</p></div>;
 const Labs = () => <div><h1>Lab Workflow</h1><p>Laboratory orders and result processing.</p></div>;
 const Unauthorized = () => <div style={{ textAlign: 'center', marginTop: '100px' }}><h1>403 - Unauthorized</h1><p>You do not have permission to access this module.</p></div>;
@@ -57,7 +58,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'appointments',
-        element: <Appointments />,
+        element: <AppointmentList />,
+      },
+      {
+        path: 'appointments/book',
+        element: <BookAppointment />,
       },
       {
         path: 'treatments',

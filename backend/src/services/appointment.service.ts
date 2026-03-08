@@ -101,4 +101,43 @@ export class AppointmentService {
     static async listAppointments(filter: any = {}) {
         return Appointment.find(filter).populate('patientId doctorId', 'name email').sort({ appointmentDate: 1 });
     }
+
+    static async getAvailableSlots(doctorId: string, dateStr: string) {
+        const date = new Date(dateStr);
+        const startOfDay = new Date(date.setHours(9, 0, 0, 0)); // 9 AM
+        const endOfDay = new Date(date.setHours(17, 0, 0, 0)); // 5 PM
+        const slotDuration = 30; // 30 mins
+
+        const existingApps = await Appointment.find({
+            doctorId: new mongoose.Types.ObjectId(doctorId),
+            status: AppointmentStatus.SCHEDULED,
+            appointmentDate: {
+                $gte: startOfDay,
+                $lte: endOfDay
+            }
+        });
+
+        const slots = [];
+        let current = new Date(startOfDay);
+
+        while (current < endOfDay) {
+            const slotStart = new Date(current);
+            const slotEnd = new Date(current.getTime() + slotDuration * 60000);
+
+            const isBooked = existingApps.some(app => {
+                const appStart = new Date(app.appointmentDate).getTime();
+                const appEnd = appStart + app.duration * 60000;
+                return (slotStart.getTime() < appEnd) && (slotEnd.getTime() > appStart);
+            });
+
+            slots.push({
+                time: slotStart.toISOString(),
+                available: !isBooked && slotStart > new Date()
+            });
+
+            current = new Date(current.getTime() + slotDuration * 60000);
+        }
+
+        return slots;
+    }
 }

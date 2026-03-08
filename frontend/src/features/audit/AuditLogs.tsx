@@ -66,7 +66,7 @@ const AuditLogs: React.FC = () => {
                                     <td className="date-cell">{new Date(log.timestamp).toLocaleString()}</td>
                                     <td>
                                         <span className="entity-label">{log.entityType}</span>
-                                        <span className="entity-id">#{log.entityId.substring(log.entityId.length - 6)}</span>
+                                        <span className="entity-id">#{log.entityId?.substring ? log.entityId.substring(Math.max(0, log.entityId.length - 6)) : 'N/A'}</span>
                                     </td>
                                     <td>
                                         <span className="action-tag">{log.action}</span>

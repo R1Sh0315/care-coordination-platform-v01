@@ -49,10 +49,12 @@ export class AuthController {
             });
 
             const token = AuthService.generateToken(user._id.toString(), user.role);
+            const refreshToken = AuthService.generateRefreshToken(user._id.toString());
 
             res.status(201).json({
                 success: true,
                 token,
+                refreshToken,
                 user: {
                     id: user._id,
                     name: user.name,
@@ -84,16 +86,48 @@ export class AuthController {
             }
 
             const token = AuthService.generateToken(user._id.toString(), user.role);
+            const refreshToken = AuthService.generateRefreshToken(user._id.toString());
 
             res.status(200).json({
                 success: true,
                 token,
+                refreshToken,
                 user: {
                     id: user._id,
                     name: user.name,
                     email: user.email,
                     role: user.role,
                 },
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async refreshToken(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { refreshToken } = req.body;
+            if (!refreshToken) {
+                return next(new AppError('Refresh token is required', 400));
+            }
+
+            const decoded = AuthService.verifyRefreshToken(refreshToken);
+            if (!decoded || !decoded.id) {
+                return next(new AppError('Invalid or expired refresh token', 401));
+            }
+
+            const user = await User.findById(decoded.id);
+            if (!user || !user.isActive) {
+                return next(new AppError('User not found or deactivated', 401));
+            }
+
+            const newToken = AuthService.generateToken(user._id.toString(), user.role);
+            const newRefreshToken = AuthService.generateRefreshToken(user._id.toString());
+
+            res.status(200).json({
+                success: true,
+                token: newToken,
+                refreshToken: newRefreshToken
             });
         } catch (err) {
             next(err);

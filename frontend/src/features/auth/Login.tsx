@@ -22,8 +22,8 @@ const Login: React.FC = () => {
         setError(null);
         try {
             const response = await api.post('/auth/login', data);
-            const { user, token } = response.data;
-            setAuth(user, token);
+            const { user, token, refreshToken } = response.data;
+            setAuth(user, token, refreshToken);
             navigate(from, { replace: true });
         } catch (err: any) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
