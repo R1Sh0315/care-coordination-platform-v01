@@ -110,8 +110,8 @@ REFRESH_TOKEN_SECRET=your_long_random_refresh_secret
 REFRESH_TOKEN_EXPIRATION=7d
 NODE_ENV=development
 BCRYPT_SALT_ROUNDS=10
-INITIAL_ADMIN_EMAIL=admin@care.com
-INITIAL_ADMIN_PASSWORD=Password123
+INITIAL_ADMIN_EMAIL=your_admin_email@example.com
+INITIAL_ADMIN_PASSWORD=your_secure_password
 INITIAL_ADMIN_NAME=System Administrator
 ```
 
