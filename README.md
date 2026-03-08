@@ -102,14 +102,22 @@ The system defines specific permissions for enterprise clinical operations:
 
 ### Backend (`/backend/.env`)
 ```env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_jwt_key
+PORT=5002
+MONGODB_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_long_random_jwt_secret
+JWT_EXPIRATION=1h
+REFRESH_TOKEN_SECRET=your_long_random_refresh_secret
+REFRESH_TOKEN_EXPIRATION=7d
+NODE_ENV=development
+BCRYPT_SALT_ROUNDS=10
+INITIAL_ADMIN_EMAIL=admin@care.com
+INITIAL_ADMIN_PASSWORD=Password123
+INITIAL_ADMIN_NAME=System Administrator
 ```
 
 ### Frontend (`/frontend/.env`)
 ```env
-VITE_API_URL=https://your-api-url/api/v1
+VITE_API_URL=http://localhost:5002/api/v1
 ```
 
 ---
