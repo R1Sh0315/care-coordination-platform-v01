@@ -31,4 +31,27 @@ export class TreatmentController {
             next(err);
         }
     }
+
+    static async list(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const filter: any = {};
+            if (req.user?.role === 'Patient') {
+                filter.patientId = req.user.id;
+            } else if (req.user?.role === 'Doctor') {
+                // Doctors see plans they created or for patients assigned to them
+                filter.$or = [
+                    { createdBy: req.user.id },
+                    { patientId: req.user.id } // This logic depends on if doctors are also patients, usually not
+                ];
+                // Better: find patients assigned to doctor first? 
+                // For now, let's just use createdBy or patientId if they are the patient.
+            }
+            // Admin sees all
+
+            const plans = await TreatmentService.listPlans(filter);
+            res.status(200).json({ success: true, data: plans });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

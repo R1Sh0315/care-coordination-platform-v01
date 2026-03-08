@@ -90,4 +90,11 @@ export class TreatmentService {
 
         return plan;
     }
+
+    static async listPlans(filter: any = {}) {
+        return TreatmentPlan.find(filter)
+            .populate('patientId', 'name email')
+            .populate('createdBy', 'name')
+            .sort({ updatedAt: -1 });
+    }
 }

@@ -26,6 +26,7 @@ router.patch('/labs/:id/status', authorizeRoles(UserRole.LabTechnician, UserRole
 
 // Treatment Plans
 router.post('/treatments', authorizeRoles(UserRole.Doctor, UserRole.Admin), TreatmentController.create);
+router.get('/treatments', TreatmentController.list);
 router.patch('/treatments/:id', authorizeRoles(UserRole.Doctor, UserRole.Admin), TreatmentController.update);
 router.patch('/treatments/:id/transition', authorizeRoles(UserRole.Doctor, UserRole.Admin), TreatmentController.transition);
 

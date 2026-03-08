@@ -32,19 +32,35 @@ const AdminStatsDashboard: React.FC = () => {
     const { user } = useAuthStore();
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState(new Date());
+
+    const fetchStats = async (showLoading = true) => {
+        if (showLoading) setLoading(true);
+        try {
+            const res = await api.get('/dashboard/admin/stats');
+            setStats(res.data.data);
+            setLastUpdated(new Date());
+        } catch (err) {
+            console.error('Failed to fetch admin stats', err);
+        } finally {
+            if (showLoading) setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await api.get('/dashboard/admin/stats');
-                setStats(res.data.data);
-            } catch (err) {
-                console.error('Failed to fetch admin stats', err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchStats();
+
+        // Auto-refresh stats every 60 seconds
+        const statsInterval = setInterval(() => fetchStats(false), 60000);
+
+        return () => clearInterval(statsInterval);
+    }, []);
+
+    // Live clock for "Last updated" or real-time feel
+    const [now, setNow] = useState(new Date());
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(timer);
     }, []);
 
     if (loading) return <div className="loading-placeholder">Calculating system metrics...</div>;
@@ -57,8 +73,13 @@ const AdminStatsDashboard: React.FC = () => {
                     <h1>System Overview</h1>
                     <p>Welcome back, {user?.name}. Here's what's happening across the platform.</p>
                 </div>
-                <div className="header-actions">
-                    <span className="last-updated">Last updated: {new Date().toLocaleTimeString()}</span>
+                <div className="header-actions" style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary)' }}>
+                        {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </div>
+                    <span className="last-updated">
+                        Synced: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                 </div>
             </header>
 
