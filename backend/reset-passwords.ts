@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
-const MONGODB_URI = 'mongodb+srv://mern-v-01:8PO44kkfiprlJYwW@mern-cluster-v01.b3wso4e.mongodb.net/';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/care_platform';
 
 async function resetPasswords() {
     try {
