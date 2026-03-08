@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.routes';
 import protectedRoutes from './routes/protected.routes';
 import intakeRoutes from './routes/intake.routes';
 import clinicalRoutes from './routes/clinical.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.config';
 
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/intakes', intakeRoutes);
 app.use('/api/v1/clinical', clinicalRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1', protectedRoutes);
 
 // Error Handling Middleware (must be after routes)

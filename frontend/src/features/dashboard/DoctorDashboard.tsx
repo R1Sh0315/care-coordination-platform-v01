@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios';
 import { useAuthStore } from '../../store/authStore';
-import '../appointments/Appointment.css';
+import './Dashboard.css';
 
 interface Appointment {
     _id: string;

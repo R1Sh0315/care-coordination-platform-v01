@@ -13,14 +13,18 @@ import AuditLogs from './features/audit/AuditLogs';
 import AppointmentList from './features/appointments/AppointmentList';
 import BookAppointment from './features/appointments/BookAppointment';
 import DoctorDashboard from './features/dashboard/DoctorDashboard';
+import AdminStatsDashboard from './features/dashboard/AdminStatsDashboard';
 import { useAuthStore } from './store/authStore';
 
-// Simple placeholder components for other modules
+// Dashboard component that switches based on user role
 const Dashboard = () => {
   const { user } = useAuthStore();
 
   if (user?.role === UserRole.Doctor) {
     return <DoctorDashboard />;
+  }
+  if (user?.role === UserRole.Admin) {
+    return <AdminStatsDashboard />;
   }
 
   return (
