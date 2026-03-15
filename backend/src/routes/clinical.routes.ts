@@ -20,6 +20,7 @@ router.patch('/appointments/:id/status', AppointmentController.updateStatus);
 router.patch('/appointments/:id/reschedule', authorizeRoles(UserRole.Receptionist, UserRole.Admin, UserRole.Patient, UserRole.Doctor), AppointmentController.reschedule);
 
 // Lab Workflow
+router.get('/labs', authorizeRoles(UserRole.Doctor, UserRole.Admin, UserRole.LabTechnician), LabController.list);
 router.post('/labs', authorizeRoles(UserRole.Doctor, UserRole.Admin), LabController.order);
 router.get('/labs/pending', authorizeRoles(UserRole.LabTechnician, UserRole.Admin), LabController.getPending);
 router.patch('/labs/:id/status', authorizeRoles(UserRole.LabTechnician, UserRole.Doctor, UserRole.Admin), LabController.updateStatus);

@@ -74,6 +74,15 @@ export class LabService {
     static async getPendingResults() {
         return LabOrder.find({ status: { $in: [LabStatus.ORDERED, LabStatus.PROCESSING] } })
             .populate('patientId', 'name email')
+            .populate('orderedByDoctor', 'name')
             .sort({ orderedAt: 1 });
+    }
+
+    static async getAllLabOrders() {
+        return LabOrder.find()
+            .populate('patientId', 'name email')
+            .populate('orderedByDoctor', 'name')
+            .populate('labTechnician', 'name')
+            .sort({ createdAt: -1 });
     }
 }

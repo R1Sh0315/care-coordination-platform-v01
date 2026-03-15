@@ -31,4 +31,13 @@ export class LabController {
             next(err);
         }
     }
+
+    static async list(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            const orders = await LabService.getAllLabOrders();
+            res.status(200).json({ success: true, data: orders });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

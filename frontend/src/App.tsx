@@ -13,6 +13,7 @@ import AuditLogs from './features/audit/AuditLogs';
 import AppointmentList from './features/appointments/AppointmentList';
 import BookAppointment from './features/appointments/BookAppointment';
 import TreatmentList from './features/treatments/TreatmentList';
+import LabList from './features/labs/LabList';
 import DoctorDashboard from './features/dashboard/DoctorDashboard';
 import AdminStatsDashboard from './features/dashboard/AdminStatsDashboard';
 import { useAuthStore } from './store/authStore';
@@ -35,7 +36,6 @@ const Dashboard = () => {
     </div>
   );
 };
-const Labs = () => <div><h1>Lab Workflow</h1><p>Laboratory orders and result processing.</p></div>;
 const Unauthorized = () => <div style={{ textAlign: 'center', marginTop: '100px' }}><h1>403 - Unauthorized</h1><p>You do not have permission to access this module.</p></div>;
 
 const router = createBrowserRouter([
@@ -93,7 +93,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'labs',
-        element: <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Doctor, UserRole.LabTechnician]}><Labs /></ProtectedRoute>,
+        element: <ProtectedRoute allowedRoles={[UserRole.Admin, UserRole.Doctor, UserRole.LabTechnician]}><LabList /></ProtectedRoute>,
       },
       {
         path: 'audit',

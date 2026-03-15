@@ -1,0 +1,138 @@
+.lab-container {
+    padding: 2rem;
+    background: #f8fafc;
+    min-height: calc(100vh - 64px);
+}
+
+.lab-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 1rem;
+}
+
+.lab-header h1 {
+    font-size: 2rem;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.lab-header p {
+    color: #64748b;
+}
+
+.lab-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.lab-table th {
+    background: #f1f5f9;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.lab-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.patient-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.patient-info strong {
+    color: #1e293b;
+}
+
+.patient-info small {
+    color: #64748b;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.badge-ordered { background: #dbeafe; color: #1e40af; }
+.badge-collected { background: #fef9c3; color: #854d0e; }
+.badge-processing { background: #ffedd5; color: #9a3412; }
+.badge-uploaded { background: #dcfce7; color: #166534; }
+.badge-reviewed { background: #f3e8ff; color: #6b21a8; }
+.badge-default { background: #f1f5f9; color: #475569; }
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-buttons button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-process {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-process:hover {
+    background: #1d4ed8;
+}
+
+.btn-upload {
+    background: #059669;
+    color: white;
+}
+
+.btn-upload:hover {
+    background: #047857;
+}
+
+.btn-review {
+    background: #7c3aed;
+    color: white;
+}
+
+.btn-review:hover {
+    background: #6d28d9;
+}
+
+.btn-view {
+    background: white;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.btn-view:hover {
+    background: #f8fafc;
+}
+
+.loading, .error-message, .no-data {
+    padding: 3rem;
+    text-align: center;
+    color: #64748b;
+}
+
+.error-message {
+    color: #ef4444;
+}
