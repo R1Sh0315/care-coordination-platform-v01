@@ -10,6 +10,7 @@ An enterprise-grade, HIPAA-compliant patient care coordination system designed t
 ---
 
 ## 🌐 Live Infrastructure
+- **Frontend Application**: [https://care-coordination-platform-v01.vercel.app/](https://care-coordination-platform-v01.vercel.app/login)
 - **Backend API**: [https://care-coordination-platform-v01.onrender.com/](https://care-coordination-platform-v01.onrender.com/)
 - **API Documentation**: [https://care-coordination-platform-v01.onrender.com/api-docs](https://care-coordination-platform-v01.onrender.com/api-docs)
 
@@ -123,7 +124,7 @@ VITE_API_URL=http://localhost:5002/api/v1
 ---
 
 ## 📈 Future Enhancements
-- [ ] **Lab Order Processing**: Digital result entry and technician workflow.
+- [x] **Lab Order Processing**: Digital result entry and technician workflow.
 - [ ] **HL7/FHIR Integration**: Standardized healthcare data exchange.
 - [ ] **AI-Driven Triage**: Machine learning models for advanced risk prediction.
 - [ ] **Telehealth**: Integrated video conferencing for remote consultations.
